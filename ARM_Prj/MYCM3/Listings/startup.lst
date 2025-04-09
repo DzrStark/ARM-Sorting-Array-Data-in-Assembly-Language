@@ -1,0 +1,419 @@
+
+
+
+ARM Macro Assembler    Page 1 
+
+
+    1 00000000                 AREA             RESET,CODE
+    2 00000000                 EXPORT           __Vectors
+    3 00000000                 EXPORT           Reset_Handler
+    4 00000000         __Vectors
+    5 00000000 00000000        DCD              __initial_sp
+    6 00000004 00000000        DCD              Reset_Handler
+    7 00000008         
+    8 00000008         Reset_Handler
+                               PROC
+    9 00000008 BF00            NOP
+   10 0000000A BF00            NOP
+   11 0000000C         DATA1
+   12 0000000C 0000000A 
+              FFFFFFFF 
+              00000003 
+              00000007 
+              00000010 
+              00000005 
+              0000000F 
+              00000002 
+              00000006 
+              00000003         DCD              10,-1,3,7,16,5,15,2,6,3
+   13 00000034         
+   14 00000034         
+   15 00000034         ;模块1：将DATA1的数据存储到可以编写的地�
+                       ��。
+   16 00000034 F85F 002C       LDR              R0,DATA1    ;把DATA1的地址�
+                                                            ��给R0
+   17 00000038 F100 0002       ADD              R0,R0,#2    ;跳过数组DATA1�
+                                                            ��址前端的0X00B
+                                                            F，以便可以直
+                                                            接读取数据
+   18 0000003C         
+   19 0000003C F04F 010A       MOV              R1, #0xA    ; 把DATA1的长度
+                                                            写给R1，用于�
+                                                            �R2比较，设置�
+                                                            ��否跳出循环
+   20 00000040 F04F 0200       MOV              R2, #0X0    ; 设置用于循�
+                                                            �的指针，用于
+                                                            和R1比较，判�
+                                                            �是否跳出循环
+                                                            
+   21 00000044         
+   22 00000044 4C1D            LDR              R4,=0X20000100 ;可以编写的
+                                                            地址
+   23 00000046         PushLoop
+   24 00000046 F850 3022       LDR              R3, [R0, R2, LSL #2] ; 将DATA1
+                                                            [R2]的值写进R3
+   25 0000004A 6023            STR              R3,[R4]     ; 将R3写入我们
+                                                            希望能够编写�
+                                                            ��地址
+   26 0000004C F104 0404       ADD              R4,R4,#4    ; 使地址自增�
+                                                            �以便于下一个
+                                                            R3存储
+   27 00000050 F102 0201       ADD              R2, R2, #1  ; 增加指针的�
+                                                            �
+   28 00000054 428A            CMP              R2, R1      ; 将指针与数�
+                                                            �长度比较
+   29 00000056 DBF6            BLT              PushLoop    ; 如果R2 < R1，�
+
+
+
+ARM Macro Assembler    Page 2 
+
+
+                                                            ��转到PushLoop
+   30 00000058         
+   31 00000058         
+   32 00000058         ;模块2：对DATA1按数据从小到大排序
+   33 00000058 4818            LDR              R0,=0X20000100 ;可以编写的
+                                                            地址
+   34 0000005A F04F 010A       MOV              R1, #0XA    ; 把DATA1的长度
+                                                            写给R1，用于�
+                                                            �R2比较，设置�
+                                                            ��否跳出循环
+   35 0000005E F04F 0200       MOV              R2, #0X0    ; 设置用于冒�
+                                                            �排序外层循环
+                                                            的指针，用于�
+                                                            ��R1比较，判断
+                                                            是否跳出外层�
+                                                            ��环
+   36 00000062 F04F 0609       MOV              R6, #0X9    ;R6用于判断是�
+                                                            ��跳出内层循�
+                                                            �，冒泡排序内
+                                                            层循环n-1次
+   37 00000066         
+   38 00000066         OuterLoop
+   39 00000066 F04F 0300       MOV              R3, #0X0    ;  设置用于冒�
+                                                            ��排序内层循�
+                                                            �的指针，用于
+                                                            和R1比较，判�
+                                                            �是否跳出内层
+                                                            循环
+   40 0000006A         
+   41 0000006A         InnerLoop
+   42 0000006A F850 4023       LDR              R4, [R0, R3, LSL #2] ; 将DATA1
+                                                            [R3]的值写进RR4
+                                                            
+   43 0000006E F100 0004       ADD              R0,R0,#4    ;使R0自增，以�
+                                                            ��R5能取到[R3+1]
+                                                            的值
+   44 00000072 F850 5023       LDR              R5, [R0, R3, LSL #2] ; 将DATA1
+                                                            [R3+1]的值写进R
+                                                            5
+   45 00000076 F1A0 0004       SUB              R0,R0,#4    ;复原R0
+   46 0000007A         
+   47 0000007A 42AC            CMP              R4, R5      ; 将这两个数�
+                                                            �进行比较
+   48 0000007C DD07            BLE              NoSwap      ; 如果R4 <= R5, �
+                                                            ��需要交换数�
+                                                            �
+   49 0000007E         
+   50 0000007E         ; 交换数值
+   51 0000007E F840 5023       STR              R5, [R0, R3, LSL #2] ;DATA1[R3]
+                                                            的值写进R5
+   52 00000082 F100 0004       ADD              R0,R0,#4    ;使R0自增，以�
+                                                            ��R4能取到[R3+1]
+                                                            的值
+   53 00000086 F840 4023       STR              R4, [R0, R3, LSL #2] ;将DATA1[
+                                                            R3+1]的值写进R4
+                                                            
+   54 0000008A F1A0 0004       SUB              R0,R0,#4    ;复原R0
+   55 0000008E         
+   56 0000008E         NoSwap
+
+
+
+ARM Macro Assembler    Page 3 
+
+
+   57 0000008E F103 0301       ADD              R3, R3, #1  ; 增加内层指�
+                                                            �的值
+   58 00000092 42B3            CMP              R3, R6      ; 将指针与数�
+                                                            �长度比较
+   59 00000094 DBE9            BLT              InnerLoop   ; 如果R3 < R1，�
+                                                            ��转到InnerLoop
+   60 00000096         
+   61 00000096 F102 0201       ADD              R2, R2, #1  ; 增加外层指�
+                                                            �的值
+   62 0000009A 428A            CMP              R2, R1      ; 将指针与数�
+                                                            �长度比较
+   63 0000009C DBE3            BLT              OuterLoop   ;如果R2 < R1，�
+                                                            �转到OuterLoop
+   64 0000009E         
+   65 0000009E         
+   66 0000009E         ;模块三：将地址为0x20000100排好序的十个数
+                       写进DATA2
+   67 0000009E 4F08            LDR              R7,=DATA2   ;读取DATA2的地�
+                                                            ��
+   68 000000A0 F8DF 9020       LDR              R9,=0x20000128 ;将0x20000100�
+                                                            �第10+1个数的�
+                                                            �址写进R9，便�
+                                                            ��后面判断是�
+                                                            �跳出循环
+   69 000000A4         InLoop
+   70 000000A4 F8D0 8000       LDR              R8,[R0]     ;从0x20000100读�
+                                                            �数值写进R8
+   71 000000A8 F8C7 8000       STR              R8,[R7]     ;将R8的数值下�
+                                                            ��进DATA2的地址
+                                                            
+   72 000000AC F100 0004       ADD              R0,R0,#4    ;使得R0地址自�
+                                                            ��，便于取第n+
+                                                            1个数
+   73 000000B0 F107 0704       ADD              R7,R7,#4    ;使得R7地址自�
+                                                            ��，便于写入DA
+                                                            TA2的第n+1个数�
+                                                            ��位置
+   74 000000B4 4548            CMP              R0,R9       ;比较R0,49
+   75 000000B6 DBF5            BLT              InLoop      ;如果R0<R9,则回
+                                                            到循环InLoop
+   76 000000B8         
+   77 000000B8         
+   78 000000B8 E7FE            B                .
+   79 000000BA                 ENDP
+   80 000000BA         
+   81 000000BA 00 00 20000100 
+              00000000 
+              20000128         AREA             STACK,DATA
+   82 00000000         DATA2
+   83 00000000 00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000         DCD              0,0,0,0,0,0,0,0,0,0
+
+
+
+ARM Macro Assembler    Page 4 
+
+
+   84 00000028 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+
+
+
+ARM Macro Assembler    Page 5 
+
+
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00               SPACE            0x100
+   85 00000128         __initial_sp
+   86 00000128         
+   87 00000128                 END
+Command Line: --debug --xref --diag_suppress=9931 --cpu=Cortex-M3 --apcs=interw
+ork --depend=.\objects\startup.d -o.\objects\startup.o -I.\RTE\_Target_1 -ID:\K
+eil\Keil5\51\ARM\PACK\Keil\STM32F1xx_DFP\2.2.0\Device\Include -ID:\Keil\Keil5\5
+1\ARM\CMSIS\Include --predefine="__UVISION_VERSION SETA 524" --predefine="STM32
+F10X_LD SETA 1" --list=.\listings\startup.lst startup.s
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Relocatable symbols
+
+DATA1 0000000C
+
+Symbol: DATA1
+   Definitions
+      At line 11 in file startup.s
+   Uses
+      At line 16 in file startup.s
+Comment: DATA1 used once
+InLoop 000000A4
+
+Symbol: InLoop
+   Definitions
+      At line 69 in file startup.s
+   Uses
+      At line 75 in file startup.s
+Comment: InLoop used once
+InnerLoop 0000006A
+
+Symbol: InnerLoop
+   Definitions
+      At line 41 in file startup.s
+   Uses
+      At line 59 in file startup.s
+Comment: InnerLoop used once
+NoSwap 0000008E
+
+Symbol: NoSwap
+   Definitions
+      At line 56 in file startup.s
+   Uses
+      At line 48 in file startup.s
+Comment: NoSwap used once
+OuterLoop 00000066
+
+Symbol: OuterLoop
+   Definitions
+      At line 38 in file startup.s
+   Uses
+      At line 63 in file startup.s
+Comment: OuterLoop used once
+PushLoop 00000046
+
+Symbol: PushLoop
+   Definitions
+      At line 23 in file startup.s
+   Uses
+      At line 29 in file startup.s
+Comment: PushLoop used once
+RESET 00000000
+
+Symbol: RESET
+   Definitions
+      At line 1 in file startup.s
+   Uses
+      None
+Comment: RESET unused
+Reset_Handler 00000008
+
+Symbol: Reset_Handler
+
+
+
+ARM Macro Assembler    Page 2 Alphabetic symbol ordering
+Relocatable symbols
+
+   Definitions
+      At line 8 in file startup.s
+   Uses
+      At line 3 in file startup.s
+      At line 6 in file startup.s
+
+__Vectors 00000000
+
+Symbol: __Vectors
+   Definitions
+      At line 4 in file startup.s
+   Uses
+      At line 2 in file startup.s
+Comment: __Vectors used once
+9 symbols
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Relocatable symbols
+
+DATA2 00000000
+
+Symbol: DATA2
+   Definitions
+      At line 82 in file startup.s
+   Uses
+      At line 67 in file startup.s
+Comment: DATA2 used once
+STACK 00000000
+
+Symbol: STACK
+   Definitions
+      At line 81 in file startup.s
+   Uses
+      None
+Comment: STACK unused
+__initial_sp 00000128
+
+Symbol: __initial_sp
+   Definitions
+      At line 85 in file startup.s
+   Uses
+      At line 5 in file startup.s
+Comment: __initial_sp used once
+3 symbols
+346 symbols in table
